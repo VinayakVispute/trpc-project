@@ -5,6 +5,7 @@ A full-stack Next.js 15 project built to learn and demonstrate **tRPC** with Rea
 ## 📚 Learning Objectives
 
 This project demonstrates:
+
 - **tRPC** end-to-end type-safe APIs
 - **React Query** for data fetching and caching
 - **Server Components** with Next.js 15 App Router
@@ -44,14 +45,13 @@ This project demonstrates:
 // projectRouter.ts - Example of tRPC router
 export const projectRouter = router({
   // Query: Fetch all projects
-  getAllProjects: protectedProcedure
-    .query(async ({ ctx }) => {
-      return await ctx.db.project.findMany({
-        where: { userId: ctx.userId },
-        include: { tasks: true },
-        orderBy: { createdAt: "desc" }
-      });
-    }),
+  getAllProjects: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.project.findMany({
+      where: { userId: ctx.userId },
+      include: { tasks: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }),
 
   // Mutation: Create project with validation
   create: protectedProcedure
@@ -60,14 +60,15 @@ export const projectRouter = router({
       return await ctx.db.project.create({
         data: {
           name: input.name,
-          userId: ctx.userId
-        }
+          userId: ctx.userId,
+        },
       });
     }),
 });
 ```
 
 **Key Learnings**:
+
 - `.query()` for read operations
 - `.mutation()` for write operations
 - `.input()` with Zod for runtime validation
@@ -82,18 +83,18 @@ export const projectRouter = router({
 // Context: Available to all procedures
 export const createContext = async () => {
   return {
-    auth: await auth(),     // Clerk auth
-    db: prisma,            // Prisma client
-  }
-}
+    auth: await auth(), // Clerk auth
+    db: prisma, // Prisma client
+  };
+};
 
 // Middleware: Authentication check
 const isAuthenticated = t.middleware(async ({ ctx, next }) => {
   if (!ctx.auth.userId) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
-    ctx: { ...ctx, userId: ctx.auth.userId }
+    ctx: { ...ctx, userId: ctx.auth.userId },
   });
 });
 
@@ -101,6 +102,7 @@ export const protectedProcedure = t.procedure.use(isAuthenticated);
 ```
 
 **Key Learnings**:
+
 - Context provides shared data to all procedures
 - Middleware chains for auth, logging, etc.
 - Type-safe context with TypeScript inference
@@ -119,13 +121,16 @@ export default async function ProjectListPage() {
   return (
     <HydrateClient>
       {/* Pre-rendered with data */}
-      {projects.map(project => <ProjectCard project={project} />)}
+      {projects.map((project) => (
+        <ProjectCard project={project} />
+      ))}
     </HydrateClient>
   );
 }
 ```
 
 **Key Learnings**:
+
 - Direct tRPC calls in Server Components
 - No loading states needed (data ready before render)
 - `HydrateClient` prepares data for client-side React Query
@@ -155,6 +160,7 @@ export function TaskList({ initialTasks, projectId }: Props) {
 ```
 
 **Key Learnings**:
+
 - `trpc.<router>.<procedure>.useQuery()` pattern
 - Initial data from server hydration
 - Automatic refetching and caching
@@ -185,7 +191,10 @@ const toggleTaskMutation = trpc.task.toggle.useMutation({
 
   // On error: Rollback
   onError: (_err, _vars, context) => {
-    utils.project.getProjectById.setData({ projectId }, context.previousProject);
+    utils.project.getProjectById.setData(
+      { projectId },
+      context.previousProject
+    );
   },
 
   // After mutation: Refetch to sync with server
@@ -196,6 +205,7 @@ const toggleTaskMutation = trpc.task.toggle.useMutation({
 ```
 
 **Key Learnings**:
+
 - Optimistic updates for instant UI feedback
 - Automatic rollback on error
 - Cache invalidation with `utils`
@@ -210,10 +220,10 @@ export function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 30 * 1000,        // Data fresh for 30s
-        gcTime: 5 * 60 * 1000,       // Cache for 5 min
-        retry: 3,                     // Retry failed requests
-        refetchOnWindowFocus: true,   // Refetch on tab focus
+        staleTime: 30 * 1000, // Data fresh for 30s
+        gcTime: 5 * 60 * 1000, // Cache for 5 min
+        retry: 3, // Retry failed requests
+        refetchOnWindowFocus: true, // Refetch on tab focus
       },
     },
   });
@@ -221,6 +231,7 @@ export function makeQueryClient() {
 ```
 
 **Key Learnings**:
+
 - Global query configuration
 - Stale-while-revalidate pattern
 - Automatic retry with exponential backoff
@@ -237,7 +248,7 @@ export function TRPCProvider(props: PropsWithChildren) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          transformer: superjson,      // Serialize Dates, etc.
+          transformer: superjson, // Serialize Dates, etc.
           url: getUrl(),
         }),
       ],
@@ -255,6 +266,7 @@ export function TRPCProvider(props: PropsWithChildren) {
 ```
 
 **Key Learnings**:
+
 - `httpBatchLink` combines multiple requests
 - `superjson` handles complex types (Date, Map, etc.)
 - Singleton pattern for client instance
@@ -294,6 +306,7 @@ model Task {
 ```
 
 **Key Features**:
+
 - Cascade deletes (deleting user removes all projects/tasks)
 - Automatic timestamps
 - Type-safe with Prisma Client
@@ -311,6 +324,7 @@ model Task {
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 ```bash
 Node.js 18+
 PostgreSQL database
@@ -320,6 +334,7 @@ Clerk account
 ### Installation
 
 1. **Clone and install dependencies**
+
 ```bash
 git clone <repo>
 cd trpc-project
@@ -327,11 +342,13 @@ pnpm install
 ```
 
 2. **Set up environment variables**
+
 ```bash
 cp .env.example .env.local
 ```
 
 Fill in:
+
 ```env
 # Clerk (from dashboard.clerk.com)
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
@@ -343,12 +360,14 @@ DATABASE_URL="postgresql://user:pass@host:5432/db"
 ```
 
 3. **Set up database**
+
 ```bash
 pnpm prisma migrate dev
 pnpm prisma generate
 ```
 
 4. **Run development server**
+
 ```bash
 pnpm dev
 ```
@@ -398,6 +417,7 @@ trpc-project/
 ## 🎯 tRPC Features Implemented
 
 ### ✅ Core Concepts
+
 - [x] Type-safe procedures (queries & mutations)
 - [x] Input validation with Zod
 - [x] Context & middleware
@@ -405,6 +425,7 @@ trpc-project/
 - [x] Error handling with `TRPCError`
 
 ### ✅ React Query Integration
+
 - [x] Client-side queries (`useQuery`)
 - [x] Mutations (`useMutation`)
 - [x] Optimistic updates
@@ -412,6 +433,7 @@ trpc-project/
 - [x] Server-side hydration (`HydrateClient`)
 
 ### ✅ Advanced Patterns
+
 - [x] HTTP batch linking (combines requests)
 - [x] SuperJSON transformer (Date serialization)
 - [x] Server Components with direct tRPC calls
@@ -423,20 +445,24 @@ trpc-project/
 ### Understanding tRPC Flow
 
 1. **Start here**: `server/trpc/routers/projectRouter.ts`
+
    - See how routers are defined
    - Query vs mutation patterns
    - Input validation
 
 2. **Middleware**: `server/trpc/init.ts`
+
    - Authentication middleware
    - Procedure types (public vs protected)
 
 3. **Client hooks**: `app/components/TaskList.tsx`
+
    - React Query hooks
    - Optimistic updates
    - Cache manipulation
 
 4. **Server calls**: `app/page.tsx`
+
    - Direct tRPC calls in Server Components
    - No React Query needed
 
@@ -449,17 +475,20 @@ trpc-project/
 ### Experiment With:
 
 1. **Add a new feature** (e.g., task priority)
+
    - Update Prisma schema
    - Add to tRPC router
    - Update UI components
    - See type safety propagate
 
 2. **Try different query patterns**
+
    - Dependent queries
    - Infinite queries
    - Prefetching
 
 3. **Explore middleware**
+
    - Add logging middleware
    - Rate limiting
    - Request timing
@@ -472,6 +501,7 @@ trpc-project/
 ## 🐛 Common tRPC Patterns
 
 ### Pattern 1: Simple Query
+
 ```typescript
 // Server
 getAllProjects: protectedProcedure.query(async ({ ctx }) => {
@@ -483,6 +513,7 @@ const { data } = trpc.project.getAllProjects.useQuery();
 ```
 
 ### Pattern 2: Query with Input
+
 ```typescript
 // Server
 getById: protectedProcedure
@@ -496,6 +527,7 @@ const { data } = trpc.project.getById.useQuery({ id: "123" });
 ```
 
 ### Pattern 3: Mutation with Cache Invalidation
+
 ```typescript
 // Server
 create: protectedProcedure
@@ -509,7 +541,7 @@ const utils = trpc.useUtils();
 const mutation = trpc.project.create.useMutation({
   onSuccess: () => {
     utils.project.getAllProjects.invalidate();
-  }
+  },
 });
 ```
 
@@ -536,20 +568,6 @@ After completing this project, you'll understand:
 - ✅ Cache invalidation strategies
 - ✅ Real-world authentication patterns
 - ✅ Database integration with Prisma
-
-## 🚦 Next Steps
-
-Try extending the project:
-
-1. Add task comments (nested relations)
-2. Implement task reordering (drag & drop)
-3. Add real-time updates with WebSockets
-4. Create a dashboard with analytics
-5. Add file uploads to tasks
-6. Implement task search/filtering
-7. Add team collaboration features
-
----
 
 **Happy Learning! 🎉**
 
